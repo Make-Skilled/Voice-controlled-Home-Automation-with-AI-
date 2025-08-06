@@ -326,12 +326,6 @@ app.run(debug=True, host='0.0.0.0', port=5000)
 # Access from other devices: http://YOUR_IP:5000
 ```
 
-### Cloud Deployment
-- **Heroku:** Add `Procfile` and `runtime.txt`
-- **AWS:** Use Elastic Beanstalk or EC2
-- **Digital Ocean:** Use App Platform
-- **Vercel/Netlify:** For static deployment
-
 ## 🔄 Updates & Maintenance
 
 ### Updating Dependencies
@@ -346,41 +340,12 @@ pip install --upgrade -r requirements.txt
 3. Create device visual in HTML/CSS
 4. Add control logic in JavaScript
 
-## 🤝 Contributing
-
-### Development Setup
-1. Fork the repository
-2. Create feature branch
-3. Make changes
-4. Test thoroughly
-5. Submit pull request
 
 ### Code Style
 - Follow PEP 8 for Python code
 - Use consistent JavaScript formatting
 - Comment complex functions
 - Test voice commands thoroughly
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 📞 Support
-
-### Getting Help
-- Check troubleshooting section first
-- Search existing issues
-- Create new issue with details:
-  - Operating system
-  - Python version  
-  - Browser used
-  - Error messages
-  - Steps to reproduce
-
-### Feature Requests
-- Open GitHub issue
-- Describe use case
-- Provide implementation suggestions
 
 ## 🎉 Acknowledgments
 
@@ -389,7 +354,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **Tailwind CSS** - Styling framework
 - **Font Awesome** - Icons
 - **Google Fonts** - Typography
-
 ---
 
 <div align="center">
