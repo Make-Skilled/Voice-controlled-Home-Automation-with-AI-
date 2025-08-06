@@ -32,8 +32,8 @@ def parse_voice_command(command):
     actions = {
         'on': ['on', 'turn on', 'switch on', 'start'],
         'off': ['off', 'turn off', 'switch off', 'stop'],
-        'increase': ['increase', 'up', 'higher', 'more'],
-        'decrease': ['decrease', 'down', 'lower', 'less']
+        'increase': ['increase', 'up', 'higher', 'more', 'louder'],
+        'decrease': ['decrease', 'down', 'lower', 'less', 'quieter']
     }
     
     detected_device = None
@@ -75,7 +75,26 @@ def parse_voice_command(command):
         temp_match = re.search(r'(\d+) degree', command)
         if temp_match:
             return detected_device, 'set_temperature', int(temp_match.group(1))
-    
+        temp_match2 = re.search(r'ac temperature (\d+)', command)
+        if temp_match2:
+            return detected_device, 'set_temperature', int(temp_match2.group(1))
+
+    # TV volume voice commands
+    if detected_device == 'tv':
+        vol_match = re.search(r'volume (\d+)', command)
+        if vol_match:
+            return detected_device, 'set_volume', int(vol_match.group(1))
+        if detected_action in ['increase', 'decrease']:
+            return detected_device, detected_action, 'volume'
+
+    # Music volume voice commands
+    if detected_device == 'music':
+        vol_match = re.search(r'volume (\d+)', command)
+        if vol_match:
+            return detected_device, 'set_volume', int(vol_match.group(1))
+        if detected_action in ['increase', 'decrease']:
+            return detected_device, detected_action, 'volume'
+
     return detected_device, detected_action, None
 
 @app.route('/')
@@ -105,30 +124,45 @@ def process_command():
     if action == 'on':
         device_states[device]['status'] = 'on'
         response['message'] = f'{device.capitalize()} turned on'
-    
+
     elif action == 'off':
         device_states[device]['status'] = 'off'
         response['message'] = f'{device.capitalize()} turned off'
-    
-    elif action == 'set_speed' and device == 'fan' and value:
+
+    elif action == 'set_speed' and device == 'fan' and value is not None:
         device_states[device]['speed'] = max(1, min(3, value))
         device_states[device]['status'] = 'on'
         response['message'] = f'Fan speed set to {device_states[device]["speed"]}'
-    
-    elif action == 'set_brightness' and device == 'bulb' and value:
+
+    elif action == 'set_brightness' and device == 'bulb' and value is not None:
         device_states[device]['brightness'] = max(0, min(100, value))
         device_states[device]['status'] = 'on' if value > 0 else 'off'
         response['message'] = f'Bulb brightness set to {device_states[device]["brightness"]}%'
-    
-    elif action == 'set_temperature' and device == 'ac' and value:
+
+    elif action == 'set_temperature' and device == 'ac' and value is not None:
         device_states[device]['temperature'] = max(16, min(30, value))
         device_states[device]['status'] = 'on'
         response['message'] = f'AC temperature set to {device_states[device]["temperature"]}°C'
-    
+
+    elif action == 'set_volume' and device in ['tv', 'music'] and value is not None:
+        device_states[device]['volume'] = max(0, min(100, value))
+        device_states[device]['status'] = 'on' if value > 0 else 'off'
+        response['message'] = f'{device.capitalize()} volume set to {device_states[device]["volume"]}%'
+
+    elif action == 'increase' and value == 'volume' and device in ['tv', 'music']:
+        device_states[device]['volume'] = min(100, device_states[device]['volume'] + 10)
+        device_states[device]['status'] = 'on' if device_states[device]['volume'] > 0 else 'off'
+        response['message'] = f'{device.capitalize()} volume increased to {device_states[device]["volume"]}%'
+
+    elif action == 'decrease' and value == 'volume' and device in ['tv', 'music']:
+        device_states[device]['volume'] = max(0, device_states[device]['volume'] - 10)
+        device_states[device]['status'] = 'on' if device_states[device]['volume'] > 0 else 'off'
+        response['message'] = f'{device.capitalize()} volume decreased to {device_states[device]["volume"]}%'
+
     else:
         response['error'] = 'Action not recognized or not applicable'
         response['message'] = 'Command not understood'
-    
+
     response['devices'] = device_states
     return jsonify(response)
 

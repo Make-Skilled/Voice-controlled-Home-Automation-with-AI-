@@ -408,6 +408,7 @@
             
             <!-- Music System -->
             <div id="music-card" class="device-card glass-card p-6 relative">
+    <audio id="music-audio" src="/static/Fear.mp3"></audio>
                 <div class="status-indicator" id="music-status"></div>
                 <div class="music-speaker" id="music-visual">
                     <div class="absolute inset-4 border-2 border-white rounded-full"></div>
@@ -650,6 +651,19 @@
                     case 'music':
                         document.getElementById('music-volume-slider').value = state.volume;
                         document.getElementById('music-volume-value').textContent = `${state.volume}%`;
+                        // Play or pause audio based on status
+                        const audio = document.getElementById('music-audio');
+                        if (state.status === 'on') {
+                            if (audio.paused) {
+                                audio.currentTime = 0;
+                                audio.play();
+                            }
+                        } else {
+                            if (!audio.paused) {
+                                audio.pause();
+                                audio.currentTime = 0;
+                            }
+                        }
                         break;
                 }
             }
