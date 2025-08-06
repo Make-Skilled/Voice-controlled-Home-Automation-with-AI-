@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Voice Home Automation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary-glow: #00f5ff;
+            --secondary-glow: #ff0080;
+            --success-glow: #00ff88;
+            --warning-glow: #ffaa00;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .cyber-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 245, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 245, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            z-index: -1;
+        }
+        
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 245, 255, 0.2);
+            border-color: rgba(0, 245, 255, 0.3);
+        }
+        
+        .device-card {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .device-card.active::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(0, 245, 255, 0.1), transparent);
+            animation: shimmer 2s infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .voice-button {
+            background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+            border: none;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .voice-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px var(--primary-glow);
+        }
+        
+        .voice-button.listening {
+            animation: pulse 1s infinite;
+            box-shadow: 0 0 40px var(--success-glow);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .bulb {
+            width: 60px;
+            height: 80px;
+            background: linear-gradient(180deg, #333 0%, #666 100%);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            position: relative;
+            margin: 0 auto;
+            transition: all 0.5s ease;
+        }
+        
+        .bulb.on {
+            background: linear-gradient(180deg, #ffeb3b 0%, #ffc107 100%);
+            box-shadow: 0 0 30px #ffeb3b, 0 0 60px #ffeb3b;
+            animation: flicker 0.1s infinite alternate;
+        }
+        
+        @keyframes flicker {
+            0% { opacity: 1; }
+            100% { opacity: 0.95; }
+        }
+        
+        .fan {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            margin: 0 auto;
+        }
+        
+        .fan-blades {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #333 0deg 120deg, transparent 120deg 240deg, #333 240deg 360deg);
+            transition: all 0.3s ease;
+        }
+        
+        .fan.on .fan-blades {
+            animation: spin 0.5s linear infinite;
+        }
+        
+        .fan.speed-1 .fan-blades { animation-duration: 2s; }
+        .fan.speed-2 .fan-blades { animation-duration: 1s; }
+        .fan.speed-3 .fan-blades { animation-duration: 0.3s; }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .ac-unit {
+            width: 80px;
+            height: 60px;
+            background: linear-gradient(135deg, #2196f3, #1976d2);
+            border-radius: 10px;
+            margin: 0 auto;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .ac-unit.on {
+            box-shadow: 0 0 20px rgba(33, 150, 243, 0.5);
+        }
+        
+        .ac-unit::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 10px;
+            right: 10px;
+            height: 3px;
+            background: #64b5f6;
+            border-radius: 2px;
+        }
+        
+        .tv-screen {
+            width: 90px;
+            height: 60px;
+            background: linear-gradient(135deg, #424242, #212121);
+            border-radius: 5px;
+            margin: 0 auto;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .tv-screen.on {
+            background: linear-gradient(135deg, #2196f3, #1e88e5);
+            box-shadow: 0 0 20px rgba(33, 150, 243, 0.3);
+        }
+        
+        .music-speaker {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #6a1b9a, #4a148c);
+            border-radius: 50%;
+            margin: 0 auto;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .music-speaker.on {
+            box-shadow: 0 0 25px rgba(106, 27, 154, 0.5);
+            animation: beat 0.8s ease-in-out infinite;
+        }
+        
+        @keyframes beat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .status-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #f44336;
+            transition: all 0.3s ease;
+        }
+        
+        .status-indicator.on {
+            background: var(--success-glow);
+            box-shadow: 0 0 10px var(--success-glow);
+        }
+        
+        .command-log {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Orbitron', monospace;
+            font-size: 14px;
+        }
+        
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 5px;
+            border-radius: 5px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .log-entry.success {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--success-glow);
+        }
+        
+        .log-entry.error {
+            background: rgba(255, 0, 128, 0.1);
+            color: var(--secondary-glow);
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .cyber-title {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--primary-glow), var(--secondary-glow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 30px rgba(0, 245, 255, 0.3);
+        }
+        
+        .device-label {
+            font-weight: 600;
+            color: #e1e1e1;
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .control-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .speech-wave {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            gap: 3px;
+            margin-top: 10px;
+        }
+        
+        .wave-bar {
+            width: 4px;
+            height: 20px;
+            background: var(--success-glow);
+            border-radius: 2px;
+            animation: wave 1s ease-in-out infinite;
+        }
+        
+        .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+        .wave-bar:nth-child(5) { animation-delay: 0.4s; }
+        
+        @keyframes wave {
+            0%, 100% { height: 10px; }
+            50% { height: 30px; }
+        }
+        
+        .listening .speech-wave {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+    <div class="cyber-grid"></div>
+    
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="cyber-title">AI VOICE CONTROL</h1>
+        
+        <!-- Voice Control Section -->
+        <div class="glass-card p-8 mb-8">
+            <div class="text-center">
+                <button id="voiceBtn" class="voice-button">
+                    <i class="fas fa-microphone text-white text-2xl"></i>
+                </button>
+                <div class="speech-wave">
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                </div>
+                <p id="voiceStatus" class="text-gray-300 mt-4">Click to start voice command</p>
+                <p id="commandDisplay" class="text-cyan-400 mt-2 font-mono"></p>
+            </div>
+        </div>
+        
+        <!-- Devices Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
+            <!-- Smart Bulb -->
+            <div id="bulb-card" class="device-card glass-card p-6 relative">
+                <div class="status-indicator" id="bulb-status"></div>
+                <div class="bulb" id="bulb-visual"></div>
+                <h3 class="device-label">Smart Bulb</h3>
+                <input type="range" id="brightness-slider" class="control-slider" min="0" max="100" value="50">
+                <div class="text-center text-sm text-gray-400 mt-2">
+                    Brightness: <span id="brightness-value">50%</span>
+                </div>
+            </div>
+            
+            <!-- Smart Fan -->
+            <div id="fan-card" class="device-card glass-card p-6 relative">
+                <div class="status-indicator" id="fan-status"></div>
+                <div class="fan" id="fan-visual">
+                    <div class="fan-blades"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="w-4 h-4 bg-gray-600 rounded-full"></div>
+                    </div>
+                </div>
+                <h3 class="device-label">Ceiling Fan</h3>
+                <input type="range" id="fan-speed-slider" class="control-slider" min="0" max="3" value="1">
+                <div class="text-center text-sm text-gray-400 mt-2">
+                    Speed: <span id="fan-speed-value">1</span>
+                </div>
+            </div>
+            
+            <!-- Air Conditioner -->
+            <div id="ac-card" class="device-card glass-card p-6 relative">
+                <div class="status-indicator" id="ac-status"></div>
+                <div class="ac-unit" id="ac-visual">
+                    <div class="absolute inset-0 flex items-center justify-center text-white text-xs font-bold">
+                        <span id="ac-temp-display">22°</span>
+                    </div>
+                </div>
+                <h3 class="device-label">Air Conditioner</h3>
+                <input type="range" id="ac-temp-slider" class="control-slider" min="16" max="30" value="22">
+                <div class="text-center text-sm text-gray-400 mt-2">
+                    Temperature: <span id="ac-temp-value">22°C</span>
+                </div>
+            </div>
+            
+            <!-- Smart TV -->
+            <div id="tv-card" class="device-card glass-card p-6 relative">
+                <div class="status-indicator" id="tv-status"></div>
+                <div class="tv-screen" id="tv-visual">
+                    <div class="absolute inset-2 bg-black rounded" id="tv-screen-inner"></div>
+                </div>
+                <h3 class="device-label">Smart TV</h3>
+                <input type="range" id="tv-volume-slider" class="control-slider" min="0" max="100" value="30">
+                <div class="text-center text-sm text-gray-400 mt-2">
+                    Volume: <span id="tv-volume-value">30%</span>
+                </div>
+            </div>
+            
+            <!-- Music System -->
+            <div id="music-card" class="device-card glass-card p-6 relative">
+                <div class="status-indicator" id="music-status"></div>
+                <div class="music-speaker" id="music-visual">
+                    <div class="absolute inset-4 border-2 border-white rounded-full"></div>
+                    <div class="absolute inset-6 border border-white rounded-full"></div>
+                </div>
+                <h3 class="device-label">Music System</h3>
+                <input type="range" id="music-volume-slider" class="control-slider" min="0" max="100" value="50">
+                <div class="text-center text-sm text-gray-400 mt-2">
+                    Volume: <span id="music-volume-value">50%</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Command Log -->
+        <div class="glass-card p-6">
+            <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                <i class="fas fa-terminal mr-2 text-cyan-400"></i>
+                Command Log
+            </h3>
+            <div id="commandLog" class="command-log">
+                <div class="log-entry">System initialized. Ready for voice commands.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class VoiceHomeAutomation {
+            constructor() {
+                this.recognition = null;
+                this.isListening = false;
+                this.deviceStates = {};
+                this.init();
+            }
+
+            init() {
+                this.setupSpeechRecognition();
+                this.setupEventListeners();
+                this.loadDeviceStates();
+            }
+
+            setupSpeechRecognition() {
+                if ('webkitSpeechRecognition' in window) {
+                    this.recognition = new webkitSpeechRecognition();
+                } else if ('SpeechRecognition' in window) {
+                    this.recognition = new SpeechRecognition();
+                } else {
+                    this.logCommand('Speech recognition not supported', 'error');
+                    return;
+                }
+
+                this.recognition.continuous = false;
+                this.recognition.interimResults = false;
+                this.recognition.lang = 'en-US';
+
+                this.recognition.onstart = () => {
+                    this.isListening = true;
+                    this.updateVoiceButton();
+                    document.getElementById('voiceStatus').textContent = 'Listening...';
+                    document.getElementById('commandDisplay').textContent = '';
+                };
+
+                this.recognition.onresult = (event) => {
+                    const command = event.results[0][0].transcript;
+                    document.getElementById('commandDisplay').textContent = `"${command}"`;
+                    this.processVoiceCommand(command);
+                };
+
+                this.recognition.onerror = (event) => {
+                    this.logCommand(`Recognition error: ${event.error}`, 'error');
+                    this.stopListening();
+                };
+
+                this.recognition.onend = () => {
+                    this.stopListening();
+                };
+            }
+
+            setupEventListeners() {
+                document.getElementById('voiceBtn').addEventListener('click', () => {
+                    if (this.isListening) {
+                        this.stopListening();
+                    } else {
+                        this.startListening();
+                    }
+                });
+
+                // Slider event listeners
+                document.getElementById('brightness-slider').addEventListener('input', (e) => {
+                    this.updateDeviceState('bulb', { brightness: parseInt(e.target.value) });
+                });
+
+                document.getElementById('fan-speed-slider').addEventListener('input', (e) => {
+                    this.updateDeviceState('fan', { speed: parseInt(e.target.value) });
+                });
+
+                document.getElementById('ac-temp-slider').addEventListener('input', (e) => {
+                    this.updateDeviceState('ac', { temperature: parseInt(e.target.value) });
+                });
+
+                document.getElementById('tv-volume-slider').addEventListener('input', (e) => {
+                    this.updateDeviceState('tv', { volume: parseInt(e.target.value) });
+                });
+
+                document.getElementById('music-volume-slider').addEventListener('input', (e) => {
+                    this.updateDeviceState('music', { volume: parseInt(e.target.value) });
+                });
+            }
+
+            startListening() {
+                if (this.recognition) {
+                    this.recognition.start();
+                }
+            }
+
+            stopListening() {
+                this.isListening = false;
+                this.updateVoiceButton();
+                document.getElementById('voiceStatus').textContent = 'Click to start voice command';
+            }
+
+            updateVoiceButton() {
+                const button = document.getElementById('voiceBtn');
+                const container = button.closest('.glass-card');
+                
+                if (this.isListening) {
+                    button.classList.add('listening');
+                    container.classList.add('listening');
+                } else {
+                    button.classList.remove('listening');
+                    container.classList.remove('listening');
+                }
+            }
+
+            async processVoiceCommand(command) {
+                try {
+                    const response = await fetch('/api/command', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ command: command })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.error) {
+                        this.logCommand(`❌ ${result.message || result.error}`, 'error');
+                    } else {
+                        this.logCommand(`✅ ${result.message}`, 'success');
+                        if (result.devices) {
+                            this.deviceStates = result.devices;
+                            this.updateUI();
+                        }
+                    }
+                } catch (error) {
+                    this.logCommand(`Network error: ${error.message}`, 'error');
+                }
+            }
+
+            async loadDeviceStates() {
+                try {
+                    const response = await fetch('/api/devices');
+                    this.deviceStates = await response.json();
+                    this.updateUI();
+                } catch (error) {
+                    this.logCommand(`Failed to load device states: ${error.message}`, 'error');
+                }
+            }
+
+            async updateDeviceState(device, updates) {
+                try {
+                    const response = await fetch(`/api/device/${device}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(updates)
+                    });
+
+                    const result = await response.json();
+                    this.deviceStates[device] = result.state;
+                    this.updateDeviceUI(device);
+                } catch (error) {
+                    this.logCommand(`Failed to update ${device}: ${error.message}`, 'error');
+                }
+            }
+
+            updateUI() {
+                Object.keys(this.deviceStates).forEach(device => {
+                    this.updateDeviceUI(device);
+                });
+            }
+
+            updateDeviceUI(device) {
+                const state = this.deviceStates[device];
+                if (!state) return;
+
+                // Update status indicator
+                const statusIndicator = document.getElementById(`${device}-status`);
+                const deviceCard = document.getElementById(`${device}-card`);
+                const deviceVisual = document.getElementById(`${device}-visual`);
+
+                if (state.status === 'on') {
+                    statusIndicator.classList.add('on');
+                    deviceCard.classList.add('active');
+                    deviceVisual.classList.add('on');
+                } else {
+                    statusIndicator.classList.remove('on');
+                    deviceCard.classList.remove('active');
+                    deviceVisual.classList.remove('on');
+                }
+
+                // Device-specific updates
+                switch (device) {
+                    case 'bulb':
+                        document.getElementById('brightness-slider').value = state.brightness;
+                        document.getElementById('brightness-value').textContent = `${state.brightness}%`;
+                        if (state.status === 'on') {
+                            deviceVisual.style.opacity = state.brightness / 100;
+                        }
+                        break;
+
+                    case 'fan':
+                        document.getElementById('fan-speed-slider').value = state.speed;
+                        document.getElementById('fan-speed-value').textContent = state.speed;
+                        deviceVisual.className = `fan ${state.status === 'on' ? 'on' : ''} speed-${state.speed}`;
+                        break;
+
+                    case 'ac':
+                        document.getElementById('ac-temp-slider').value = state.temperature;
+                        document.getElementById('ac-temp-value').textContent = `${state.temperature}°C`;
+                        document.getElementById('ac-temp-display').textContent = `${state.temperature}°`;
+                        break;
+
+                    case 'tv':
+                        document.getElementById('tv-volume-slider').value = state.volume;
+                        document.getElementById('tv-volume-value').textContent = `${state.volume}%`;
+                        break;
+
+                    case 'music':
+                        document.getElementById('music-volume-slider').value = state.volume;
+                        document.getElementById('music-volume-value').textContent = `${state.volume}%`;
+                        break;
+                }
+            }
+
+            logCommand(message, type = 'info') {
+                const log = document.getElementById('commandLog');
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${type}`;
+                entry.innerHTML = `<span class="text-gray-400">[${new Date().toLocaleTimeString()}]</span> ${message}`;
+                
+                log.appendChild(entry);
+                log.scrollTop = log.scrollHeight;
+
+                // Keep only last 50 entries
+                while (log.children.length > 50) {
+                    log.removeChild(log.firstChild);
+                }
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new VoiceHomeAutomation();
+        });
+    </script>
+</body>
+</html>
